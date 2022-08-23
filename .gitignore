@@ -27,7 +27,6 @@ Example Workflows/
 *.csv
 *.xlsx
 *.xls
-*.txt
 
 # Folders # 
 datos/
