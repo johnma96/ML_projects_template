@@ -4,6 +4,10 @@ This project structure was partially influenced by the [Cookiecutter Data Scienc
 
 Check this [post](https://www.jeremyjordan.me/ml-projects-guide/) by Jeremy Jordan for get guidelines on managing ML projects.
 
+Other resources.
+- Books
+    - [Clean Machine Learning Code](https://leanpub.com/cleanmachinelearningcode)
+
 ## Repo structure 
 
 ```
