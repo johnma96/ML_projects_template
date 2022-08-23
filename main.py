@@ -1,3 +1,6 @@
+# Simplifies the execution of one or more of the src scripts 
+# For instace, here we are reading different types of source data
+
 from src import Load_data
 
 load = Load_data()
