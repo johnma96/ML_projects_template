@@ -11,16 +11,17 @@ Check this [post](https://www.jeremyjordan.me/ml-projects-guide/) by Jeremy Jord
 │
 ├── LICENSE
 │
-├── credentials/
-│   ├── __init__.py                   <- File to work with python packages
-|   ├── data_paths.py                 <- File to get absolute paths from credentials files.
+├── credentials
+│   ├── __init__.py                   <- Script to work with python packages
+|   ├── data_paths.py                 <- Script to get absolute paths from credentials files.
 │
-├── data                              <- Folder that contains data used or generated. Please be careful with files you're going to track as they may contain sensitive information.
+├── data                              <- Folder that contains data used or generated. Please be careful with files you're going to track
+│                                        as they may contain sensitive information.
 │   ├── archive/                      <- Place to put archive data is no longer usabled. Not synced with git. 
 │   ├── processed/                    <- Data sets for modeling.
 │   ├── raw/                          <- The original, immutable data dump
-│   ├── __init__.py                   <- File to work with python packages
-|   ├── data_paths.py                 <- File to get absolute paths from files sotred within archive, processed or raw folder
+│   ├── __init__.py                   <- Script to work with python packages
+|   ├── data_paths.py                 <- Script to get absolute paths from files sotred within archive, processed or raw folder
 │
 ├── docs                              <- A default Sphinx project; see sphinx-doc.org for details.
 │
@@ -31,20 +32,26 @@ Check this [post](https://www.jeremyjordan.me/ml-projects-guide/) by Jeremy Jord
 │   ├── deliver                       <- Notebooks shared with others. 
 │   ├── archive                       <- Develop notebooks no longer being used. 
 │
+├── references                        <- Data dictionaries, manuals, and all other explanatory materials. Consider ignoring some files 
+│                                        when they are binary or large   
+│
 ├── reports                           <- Generated analysis as HTML, PDF, LaTeX, etc.
 │   ├── figures                       <- Generated graphics and figures to be used in reporting
 │
 ├── src                               <- Source code for use in this project 
-│   ├── __init__.py                   <- File to work with python packages
 │   ├── archive/                      <- No longer current scripts. 
-│   ├── sql/                          <- SQL source code. Consider ignoring files that may be inside this folder as they contain sensitive code and information
-│   ├── ingest_data.py                <- Script for ingesting data from different sources 
+│   ├── sql/                          <- SQL source code. Consider ignoring files that may be inside this folder as they contain sensitive 
+│                                        code and information
+│   ├── __init__.py                   <- Script to work with python packages
+│   ├── evaluate_model.py             <- Script for evaluating model performance
 │   ├── generate_features.py          <- Script for cleaning and transforming data and generating features used for use in training and scoring.
-│   ├── train_model.py                <- Script for training machine learning model(s)
+│   ├── load_data.py                  <- Script for ingesting data from different sources 
+│   ├── postprocess.py                <- Script for postprocessing predictions and model results 
 │   ├── score_model.py                <- Script for scoring new predictions using a trained model.
-│   ├── postprocess.py                <- Script for postprocessing predictions and model results
-│   ├── evaluate_model.py             <- Script for evaluating model performance 
+│   ├── train_model.py                <- Script for training machine learning model(s)
 │
-├── run.py                            <- Simplifies the execution of one or more of the src scripts 
+├── main.py                           <- Simplifies the execution of one or more of the src scripts 
 ├── requirements.txt                  <- Python package dependencies 
+├── .gitignore                        <- Script with some templates to ignore by git 
+
 ```
