@@ -201,4 +201,4 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 
 # Ignore credentials
-credentials/credentials.json
+credentials/credentials_bq.json
