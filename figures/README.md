@@ -1,0 +1,1 @@
+Put your graphics here. Should ignore this folder in your gitignore. Remember that git is not oriented to track binary files.
