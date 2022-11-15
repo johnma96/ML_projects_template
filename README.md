@@ -59,3 +59,17 @@ Other resources.
 ├── .gitignore                        <- Script with some templates to ignore by git 
 
 ```
+
+references folder: Place here pdf files or other bibliographic sources that have allowed to reach the selection of the model or the understanding of some algorithm that you want to keep.
+
+Consider ignoring some files when they are binary or large
+
+noteboosk folder: This folder is intended to store all the notebooks you create to explore, test, train, etc. models and code in general. Naming convention is the suggest by [Cookiecutter](https://drivendata.github.io/cookiecutter-data-science/#directory-structure): 
+- A number (for ordering), the creator's initials, and a short `-` delimited description, e.g. `1.0-jqp-initial-data-exploration`.
+
+models folder: Trained and serialized models, model predictions, or model summaries
+
+docs folder: A default Sphinx project; see sphinx-doc.org for details.
+
+data folder: Use this folder to store your data. Here there's a python's file for get absolute path of this folder.
+Currently there are 5 folders for store data: raw (for raw data from the company), interim (for data with some modification but not completly), processed (for manipulated data in final version) and external(data from third parties).

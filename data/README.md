@@ -1,2 +1,0 @@
-Use this folder to store your data. Here there's a python's file for get absolute path of this folder.
-Currently I have 3 folders for store data: raw (for raw data), processed (for manipulated data) and archiv(for unusable or old data)
