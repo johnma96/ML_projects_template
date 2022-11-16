@@ -1,1 +1,0 @@
-Folder to store your credentials. You must be careful not to track the files that contain the credentials. Here is a script to get the path of a credential file in order to read them.
