@@ -1,21 +1,37 @@
 import os
-from glob import glob
-from typing import Dict, List, Union
+
+from glob   import glob
+from typing import Union
 
 class Abs_paths:
     """
     Class intended for the manipulation of the absolute paths of the packet.
+
+    Attributes
+    ----------
+    parent_path : str
+        Absolute package path
+    option_paths : dict
+        Dictionary with absolute paths of subpackages up to the fifth level 
+        of depth
+
+
+    Methods
+    -------
+    get_absolute_path(self, folder_name, deep=1)
+        Gets the absolute path of the searched folder according to the 
+        depth level.
     """
+    __exclude_folders = ['.vscode', '__pycache__', 'venv', 'env',
+                                '.venv', '.env','.git']
 
     def __init__(self, max_level: int = 5) -> None:
         """
-        Create the absolute path of the directory and generate the set of 
-        possible paths for the max_level.
-
         Parameters
         ----------
         max_level : int, optional
             Maximum level of depth within the parent package, by default 5
+
         """
 
         self.parent_path = os.path.abspath(os.path.join(f'..{os.sep}..'))
@@ -43,9 +59,12 @@ class Abs_paths:
         ValueError
             If the passed object name does not exist within the passed deep
         """
+        if folder_name in self.__exclude_folders:
+            raise ValueError('This folder is excluded from searching')
 
         obj_lev = []
         paths_lev = []
+
         for option in self.option_paths[deep]:
             obj_lev.append(option.split(os.sep)[-2])
             paths_lev.append(option)
@@ -73,10 +92,6 @@ class Abs_paths:
             max_level
         """
 
-        exclude_folders = ['.vscode', '__pycache__', 'venv', 'env',
-                                '.venv', '.env','.git']
-
-
         def paths_at_level(level: int) -> list:
             """
             Gets the absolute paths of the folders at the searched level.
@@ -92,13 +107,12 @@ class Abs_paths:
                 List of routes at the level sought
             """
             
-
             options = glob(self.parent_path+os.sep+'*\\'*level)
             final_paths = []
             for option in options:
                 subfolders = option.split(os.sep)
                 list_subs = subfolders[-(level+1):-1]
-                if any([element in exclude_folders for element in list_subs]):
+                if any([element in self.__exclude_folders for element in list_subs]):
                     continue
                 else: final_paths.append(option)
             return final_paths
@@ -107,3 +121,15 @@ class Abs_paths:
                                                         range(0,max_level+1)}
 
         self.option_paths = dictionary_paths
+
+    def get_exclude_folders(self) -> list:
+        """
+        Get a list of folders whose absolute path cannot be obtained
+
+        Returns
+        -------
+        list
+            List of excluded folders
+        """
+        
+        return self.__exclude_folders
