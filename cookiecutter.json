@@ -1,0 +1,8 @@
+{
+    "project_title": "IA project",
+    "project_slug": "ia_project",
+    "project_description": "Something amazing!",
+    "project_author_name": "Your name",
+    "project_packages": ["All", "Minimal"],
+    "python_version": "3.19.12"
+}

@@ -1,0 +1,10 @@
+# conda env create --file environment.yml
+# conda activate cookiecutter_ml_projects
+
+name: cookiecutter_ml_projects
+channels:
+  - anaconda
+  - conda-forge
+  - defaults
+dependencies:
+  - cookiecutter=2.1.1

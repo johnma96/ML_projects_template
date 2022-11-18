@@ -1,1 +1,0 @@
-SQL source code. Consider ignoring files that may be inside this folder as they contain sensitive code and information

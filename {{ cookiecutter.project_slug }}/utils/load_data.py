@@ -27,8 +27,8 @@ class Load_data:
     from_excel(path=None, type=None, name_file=None, **kwargs)
         Read excel files from sub-subfolders within data subfolder
     """
-
-    path_credentials = Abs_paths(1).get_absolute_path('credentials')
+    
+    path_credentials = Abs_paths().get_absolute_path('credentials')
 
     def from_BigQuery(self,
                     query: str,

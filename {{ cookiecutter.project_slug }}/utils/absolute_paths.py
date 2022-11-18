@@ -34,7 +34,7 @@ class Abs_paths:
 
         """
 
-        self.parent_path = os.path.abspath(os.path.join(f'..{os.sep}..'))
+        self.parent_path = "g:\\My Drive\\ML_projects\\{{ cookiecutter.project_slug }}" # os.path.abspath(os.path.join(f''))
         self.__build_paths(max_level)
 
     def get_absolute_path(self, folder_name: str, deep: int = 1) -> Union[str, list]:
