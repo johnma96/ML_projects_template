@@ -1,9 +1,9 @@
-# python -m venv venv
+# python -m venv .venv
 #
 # Linux -  Mac systems
-#     source venv/bin/activate
+#     source .venv/bin/activate
 # Windows system using git bash or WSL:
-#     source venv/Scripts/activate
+#     source .venv/Scripts/activate
 #
 # pip install --no-cache-dir -r requirements.txt
 
