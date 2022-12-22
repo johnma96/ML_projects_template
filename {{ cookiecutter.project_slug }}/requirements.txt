@@ -7,6 +7,7 @@
 #
 # pip install --no-cache-dir -r requirements.txt
 
+pyprojroot==0.2.0
 ipykernel==6.17.0
 matplotlib==3.6.0
 {% if cookiecutter.project_packages == "All" -%}

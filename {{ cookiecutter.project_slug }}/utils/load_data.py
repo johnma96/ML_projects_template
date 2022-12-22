@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import warnings
 
 from google.oauth2   import service_account
 from .absolute_paths import Abs_paths
@@ -17,6 +18,9 @@ class Load_data:
     path_credentials : str
         Absolute path to the credentials subfolder
 
+    abs_ : Abs_paths
+        "Abs_path" type object used to find the files to be loaded
+
     Methods
     -------
     from_BigQuery(query, path_credentials=None, name_file=None, 
@@ -28,7 +32,9 @@ class Load_data:
         Read excel files from sub-subfolders within data subfolder
     """
     
-    path_credentials = Abs_paths().get_absolute_path('credentials')
+    def __init__(self) -> None:
+        self.abs_ = Abs_paths()
+        self.path_credentials = self.abs_.get_abs_path_folder('credentials')
 
     def from_BigQuery(self,
                     query: str,
@@ -73,10 +79,20 @@ class Load_data:
                 raise ValueError(
                     "Need to provide a filename to search within the credentials folder"
                 )
+        try:
+            credentials = service_account.Credentials.from_service_account_file(
+                path_credentials
+            )
+        except:
+            try:
+                path_credentials = self.abs_.get_abs_path_file(name_file)
+                credentials = service_account.Credentials.from_service_account_file(
+                path_credentials
+            )
 
-        credentials = service_account.Credentials.from_service_account_file(
-            path_credentials
-        )
+            except:
+                raise ValueError('BigQuery connection credentials could not be established')
+
 
         df = pd.read_gbq(query=query, project_id=project_id,
                          credentials=credentials)
@@ -110,9 +126,15 @@ class Load_data:
         pd.DataFrame
             Dataframe with loaded data
         """
-        
-        path_to_search = self.__build_path(path, type, name_file)
-        df = pd.read_csv(filepath_or_buffer=path_to_search, **kwargs)
+        try: 
+            path_to_search = self.__build_path(path, type, name_file)
+            df = pd.read_csv(filepath_or_buffer=path_to_search, **kwargs)
+        except:
+            warnings.warn(message="The file is not within the searched subfolder type."
+                                " Will be searched using only the name." 
+                                " Make sure it is the file you are looking for.")
+            path_to_search = self.abs_.get_abs_path_file(name_file)
+            df = pd.read_csv(filepath_or_buffer=path_to_search, **kwargs)
 
         return df
 
@@ -143,8 +165,15 @@ class Load_data:
             Dataframe with loaded data
         """
 
-        path_to_search = self.__build_path(path, type, name_file)
-        df = pd.read_excel(io=path_to_search, **kwargs)
+        try: 
+            path_to_search = self.__build_path(path, type, name_file)
+            df = pd.read_excel(io=path_to_search, **kwargs)
+        except:
+            warnings.warn(message="The file is not within the searched subfolder type."
+                                " Will be searched using only the name." 
+                                " Make sure it is the file you are looking for.")
+            path_to_search = self.abs_.get_abs_path_file(name_file)
+            df = pd.read_excel(io=path_to_search, **kwargs)
 
         return df
 
@@ -179,20 +208,31 @@ class Load_data:
             correct name of the subfolders within the data folder, or if you do 
             not provide the correct name of any file
         """
+        type_options = ['raw', 'interim', 'processed', 'external']
 
-        # Getting the path of data folder within project and passing to read excel
-        if path is None and not (type is None) and not (name_file is None):
-            path_to_search = Abs_paths(2).get_absolute_path(folder_name=type,
-                                                            deep=2)
-            path_to_search += name_file
-        elif not (path is None) and (type is None) and (name_file is None):
+
+        if all([True if option is None else False for option in (path, type, name_file)]):
+            raise KeyError("You did not provide information for the search")
+
+        elif (path is not None) and (type is None) and (name_file is None):
             path_to_search = path
+        
+        elif (path is None) and (type in type_options) and (name_file is not None):
+            path_to_search = self.abs_.get_abs_path_folder(folder_name=type, deep=2)
+            path_to_search += name_file
+
+        elif (path is None) and not(type in type_options) and (name_file is not None):
+            first_part_msg = "The subfolder passed does not exist within data."
+            if type is None:
+                first_part_msg = ''
+            warnings.warn(message=first_part_msg+ 
+                                    " The file will be searched using only the name." 
+                                    " Make sure it is the file you are looking for.")
+            path_to_search = self.abs_.get_abs_path_file(name_file)
+
         else:
             raise KeyError(
-                "You do not provided a search path, you must necessarily type a"
-                " folder that"
-                " is inside the 'data' folder, in which the excel or csv file"
-                " you want to open will be"
+                "Cannot set a path to the file with the given parameter settings"
             )
 
         return path_to_search
