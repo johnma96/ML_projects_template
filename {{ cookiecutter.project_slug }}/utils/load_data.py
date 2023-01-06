@@ -35,6 +35,14 @@ class Load_data:
     def __init__(self) -> None:
         self.abs_ = Abs_paths()
         self.path_credentials = self.abs_.get_abs_path_folder('credentials')
+        try:
+            path_credentials = self.path_credentials + 'credentials_bq.json'
+            self.credentials_bq = service_account.Credentials.from_service_account_file(
+                path_credentials
+            )
+        except: 
+            warnings.warn("The object was not able to set BigQuery credentials" 
+                        "using the 'credentials_bq.json' file inside the 'credentials' folder")
 
     def from_BigQuery(self,
                     query: str,
@@ -80,13 +88,13 @@ class Load_data:
                     "Need to provide a filename to search within the credentials folder"
                 )
         try:
-            credentials = service_account.Credentials.from_service_account_file(
+            self.credentials_bq = service_account.Credentials.from_service_account_file(
                 path_credentials
             )
         except:
             try:
                 path_credentials = self.abs_.get_abs_path_file(name_file)
-                credentials = service_account.Credentials.from_service_account_file(
+                self.credentials_bq = service_account.Credentials.from_service_account_file(
                 path_credentials
             )
 
@@ -95,7 +103,7 @@ class Load_data:
 
 
         df = pd.read_gbq(query=query, project_id=project_id,
-                         credentials=credentials)
+                         credentials=self.credentials_bq)
 
         return df
 
