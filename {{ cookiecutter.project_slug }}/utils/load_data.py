@@ -1,12 +1,11 @@
-import os
-import pandas as pd
 import warnings
+import pandas as pd
 
-from google.oauth2   import service_account
-from .absolute_paths import Abs_paths
+from .make_connection import MakeConnection
+from .read_sql_file import read_sql
 
 
-class Load_data:
+class LoadData(MakeConnection):
     """
     Class to load data in a Pythonic way, this from different information 
     sources: 
@@ -15,11 +14,15 @@ class Load_data:
 
     Attributes
     ----------
-    path_credentials : str
-        Absolute path to the credentials subfolder
-
-    abs_ : Abs_paths
-        "Abs_path" type object used to find the files to be loaded
+    file_credentials_path: str
+        Absolute path to the .json credentials file to BigQuery. Only if the 
+        with_gbq() method is used. Inherited from MakeConnection class
+    credentials_bq: service_account
+        Connection object to BigQuery using a service account. Only if the 
+        with_gbq() method is used. Inherited from MakeConnection class
+    max_level: int
+        Maximum level of depth within the package, in which it seeks to establish 
+        the absolute paths. Inherited from the AbsPaths class
 
     Methods
     -------
@@ -32,23 +35,32 @@ class Load_data:
         Read excel files from sub-subfolders within data subfolder
     """
     
-    def __init__(self) -> None:
-        self.abs_ = Abs_paths()
-        self.path_credentials = self.abs_.get_abs_path_folder('credentials')
+    def __init__(
+        self,
+        file_credentials_path: str = None,
+        file_credentials_name = "credentials_bq.json",
+        type_rdbms: str = 'bigquery',
+        max_level: int = 5
+    ) -> None:
+
+        # Set max depth to handle routes 
+        super().__init__(max_level=max_level)
+        
         try:
-            path_credentials = self.path_credentials + 'credentials_bq.json'
-            self.credentials_bq = service_account.Credentials.from_service_account_file(
-                path_credentials
-            )
-        except: 
-            warnings.warn("The object was not able to set BigQuery credentials" 
-                        "using the 'credentials_bq.json' file inside the 'credentials' folder")
+            # Establish connection with BigQuery service using MakeConnection class
+            if type_rdbms == "bigquery":
+                self.with_gqb(file_credentials_path=file_credentials_path, 
+                            file_credentials_name=file_credentials_name)
+        except (FileNotFoundError, ValueError):
+            warnings.warn("Your instance is not connected with BigQuery")
+
 
     def from_BigQuery(self,
                     query: str,
-                    path_credentials: str = None,
-                    name_file: str = None,
+                    file_credentials_path: str = None,
+                    file_credentials_name: str = None,
                     project_id: str = "dolphin-prod",
+                    **kwargs
                 ) -> pd.DataFrame:
         """
         Load data directly from the Google Cloud Platform BigQuery service.
@@ -56,7 +68,8 @@ class Load_data:
         Parameters
         ----------
         query : str
-            Query to be read and then load data
+            Query to be read and then load data. You can pass a query directly 
+            or the name of the .sql file that contains it.
         path_credentials : str, optional
             Credential's path to do connection with GCP (It's recommended use a
             service account). By default is None. If it's not passed you can 
@@ -67,6 +80,9 @@ class Load_data:
             project, by default None
         project_id : str, optional
             GCP project ID, by default "dolphin-prod"
+        **kwargs: dict, optional
+            Extra arguments (such as a google BigQuery connection object) to be 
+            passed to pandas_gbq's to_gbq function
 
         Returns
         -------
@@ -79,27 +95,13 @@ class Load_data:
             If neither a path nor a name is supplied to search for credentials 
             within the credentials subfolder
         """
+        if ".sql" in query:
+            query = read_sql(file_name=query)
 
-        if path_credentials is None:
-            try:
-                path_credentials = self.path_credentials + name_file
-            except:
-                raise ValueError(
-                    "Need to provide a filename to search within the credentials folder"
-                )
-        try:
-            self.credentials_bq = service_account.Credentials.from_service_account_file(
-                path_credentials
-            )
-        except:
-            try:
-                path_credentials = self.abs_.get_abs_path_file(name_file)
-                self.credentials_bq = service_account.Credentials.from_service_account_file(
-                path_credentials
-            )
-
-            except:
-                raise ValueError('BigQuery connection credentials could not be established')
+        # Make conecction with BigQuery service
+        if (file_credentials_name is None) or (file_credentials_path is None):
+            self.with_gqb(file_credentials_path=file_credentials_path, 
+                            file_credentials_name=file_credentials_name)
 
 
         df = pd.read_gbq(query=query, project_id=project_id,
