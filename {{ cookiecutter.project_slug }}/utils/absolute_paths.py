@@ -4,9 +4,9 @@ import pyprojroot
 from glob   import glob
 from typing import Union
 
-class Abs_paths:
+class AbsPaths:
     """
-    Class intended for the manipulation of the absolute paths of the packet.
+    Class for manipulating absolute paths within the package.
 
     Attributes
     ----------
@@ -17,7 +17,17 @@ class Abs_paths:
         of depth
     option_paths_files : dict
         Dictionary with absolute paths of subpackages up to the fifth level 
-            of depth
+        of depth
+    excluded_folders: list
+        Folders that are excluded when searching for absolute paths
+    excluded_files: list
+        Files that are excluded when searching for absolute paths
+    file_extensions_excluded: list
+        Cache files and build remnants that are not of interest to absolute path 
+        lookups
+    max_level: int
+        Maximum level of depth within the package, in which it seeks to establish 
+        the absolute paths
 
 
     Methods
@@ -26,10 +36,11 @@ class Abs_paths:
         Gets the absolute path of the searched folder according to the 
         depth level.
     """
-    __excluded_folders = ['.vscode', '__pycache__', 'venv', 'env',
+
+    _excluded_folders = ['.vscode', '__pycache__', 'venv', 'env',
                                 '.venv', '.env','.git']
-    __excluded_files = ['__init__.py', 'cpython-39.pyc']
-    __excluded_endings = ['cpython-39.pyc']
+    _excluded_files = ['__init__.py', 'cpython-39.pyc']
+    _file_endings_excluded = ['cpython-39.pyc']
 
     def __init__(self, max_level: int = 5) -> None:
         """
@@ -41,7 +52,8 @@ class Abs_paths:
         """
 
         self.parent_path = pyprojroot.here().__str__()
-        self.__build_paths(max_level)
+        self.max_level = max_level
+        self.__build_paths()
 
     def get_abs_path_file(self, file_name: str, deep: int = 5) -> Union[str, list]:
 
@@ -66,7 +78,8 @@ class Abs_paths:
         ValueError
             If the passed object name does not exist within the passed deep
         """
-        if file_name in self.__excluded_files:
+
+        if file_name in self._excluded_files:
             raise ValueError('This file is excluded from searching')
 
         file_lev = []
@@ -86,7 +99,7 @@ class Abs_paths:
             else:
                 return [paths_lev[index] for index in possible_index]
         else:
-            raise ValueError(f"The file is not found in a depth up to {deep} levels")
+            raise ValueError(f"File not found. Explored depth: {deep} levels")
 
     def get_abs_path_folder(self, folder_name: str, deep: int = 5) -> Union[str, list]:
 
@@ -111,7 +124,8 @@ class Abs_paths:
         ValueError
             If the passed object name does not exist within the passed deep
         """
-        if folder_name in self.__excluded_folders:
+
+        if folder_name in self._excluded_folders:
             raise ValueError('This folder is excluded from searching')
 
         folder_lev = []
@@ -133,7 +147,7 @@ class Abs_paths:
         else:
             raise ValueError(f"The folder is not found in a depth up to {deep} levels")
 
-    def __build_paths(self, max_level) -> dict:
+    def __build_paths(self) -> dict:
         """
         Build a dictionary with paths for depth levels from 1 to max_level.
 
@@ -166,6 +180,7 @@ class Abs_paths:
             ValueError
                 if you supply some type other than 'folder' or 'file'
             """
+
             if level == 0:
                 options = glob(self.parent_path)
             else: 
@@ -174,7 +189,7 @@ class Abs_paths:
             if type == 'folders':
                 options = [opt+os.sep for opt in options if (
                                 os.path.isdir(opt) and 
-                                opt.split(os.sep)[-1] not in self.__excluded_folders
+                                opt.split(os.sep)[-1] not in self._excluded_folders
                             )
                         ]
 
@@ -182,9 +197,9 @@ class Abs_paths:
                 options = [opt for opt in options if (
                                 (os.path.isfile(opt)) 
                                 and
-                                (opt.split(os.sep)[-1] not in self.__excluded_files)
+                                (opt.split(os.sep)[-1] not in self._excluded_files)
                                 and
-                                not(any([opt.endswith(end) for end in self.__excluded_endings]))
+                                not(any([opt.endswith(end) for end in self._file_endings_excluded]))
                             )
                         ]
             else:
@@ -193,21 +208,127 @@ class Abs_paths:
             return options
 
         dict_paths_folders = {level:paths_at_level(level, type='folders') for level in 
-                                                        range(0,max_level+1)}
+                                                        range(0,self.max_level+1)}
         dict_paths_files = {level:paths_at_level(level, type='files') for level in 
-                                                        range(0,max_level+1)}
+                                                        range(0,self.max_level+1)}
 
         self.option_paths_folders = dict_paths_folders
         self.option_paths_files = dict_paths_files
 
-    def get_excluded_folders(self) -> list:
-        """
-        Get a list of folders whose absolute path cannot be obtained
 
-        Returns
-        -------
-        list
-            List of excluded folders
+    # ----------------------------------------------------------------------
+    # attrs
+
+
+    @property
+    def excluded_folders(self) -> list[str]:
+        """
+        Returns a list with the name of the folders excluded for the construction of absolute paths
+
+        Examples
+        --------
+        >>> (abs_path.excluded_folders(
+        ['.vscode', '__pycache__', 'venv', 'env', '.venv', '.env','.git']
+        """
+
+        return self._excluded_folders
+
+    @excluded_folders.setter
+    def excluded_folders(self, folder_list: list[str]) -> None:
+        """
+        Sets the list of folders that are ignored by the instance
+
+        Parameters
+        ----------
+        folder_list : list
+            List of folders that will be ignored when building absolute paths
+
+        Raises
+        ------
+        ValueError
+            If a different value is passed to a list of strings
         """
         
-        return self.__excluded_folders
+        if not isinstance(folder_list, list):
+            raise ValueError("You must pass a list of folders inside the package"
+                                " that will be excluded")
+
+        self._excluded_folders = folder_list
+        self.__build_paths()
+
+    def add_excluded_folders(self, folder_name: str) -> None:
+        """
+        Add a new folder to the list of excluded folders.
+
+        Parameters
+        ----------
+        folder_name : str
+            Folder to be ignored for building absolute paths
+        """
+
+        self._excluded_folders.append(folder_name)
+        self.__build_paths()
+
+    @property
+    def excluded_files(self) -> list:
+        """
+        Returns a list of generic filenames ignored during the construction of 
+        absolute paths
+        """
+
+        return self._excluded_files
+
+    @excluded_files.setter
+    def excluded_files(self, file_list: list[str]) -> None:
+        """
+        Sets the list of generic files that are ignored by the instance
+
+        Parameters
+        ----------
+        file_list : list
+            List of files that will be ignored when building absolute paths
+
+        Raises
+        ------
+        ValueError
+            If a different object is passed to a list of strings
+        """
+        if not isinstance(file_list, list):
+            raise ValueError("You must pass a list of generic files inside the" 
+                                " package that will be excluded")
+
+        self._excluded_files = file_list
+        self.__build_paths()
+
+
+    @property
+    def file_endings_excluded(self) -> list:
+        """
+        Returns a list containing endings of file names that are excluded
+        """
+
+        return self._file_endings_excluded
+        
+    @file_endings_excluded.setter
+    def file_endings_excluded(self, ending_list: list[str]) -> None:
+        """
+        Sets a list of filename endings to be excluded by the instance
+
+        Parameters
+        ----------
+        ending_list : list
+            List of file name endings that will be ignored when building absolute 
+            paths
+
+        Raises
+        ------
+        ValueError
+            If a different object is passed to a list of strings
+        """
+        
+        if not isinstance(ending_list, list):
+            raise ValueError("You must pass a list of file name endings that are" 
+                                " inside the package and that will be ignored.")
+
+        self._file_endings_excluded = ending_list
+        self.__build_paths()
