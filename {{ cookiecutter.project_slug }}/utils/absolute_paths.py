@@ -10,6 +10,9 @@ class AbsPaths:
 
     Attributes
     ----------
+    excluded_folders
+    excluded_files
+    file_extensions_excluded
     parent_path : str
         Absolute package path
     option_paths_folders : dict
@@ -18,13 +21,6 @@ class AbsPaths:
     option_paths_files : dict
         Dictionary with absolute paths of subpackages up to the fifth level 
         of depth
-    excluded_folders: list
-        Folders that are excluded when searching for absolute paths
-    excluded_files: list
-        Files that are excluded when searching for absolute paths
-    file_extensions_excluded: list
-        Cache files and build remnants that are not of interest to absolute path 
-        lookups
     max_level: int
         Maximum level of depth within the package, in which it seeks to establish 
         the absolute paths
