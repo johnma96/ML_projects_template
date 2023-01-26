@@ -95,14 +95,14 @@ class LoadData(MakeConnection):
             If neither a path nor a name is supplied to search for credentials 
             within the credentials subfolder
         """
+
         if ".sql" in query:
             query = read_sql(file_name=query)
 
-        # Make conecction with BigQuery service
-        if (file_credentials_name is None) or (file_credentials_path is None):
+        # Make connection with BigQuery service
+        if not(file_credentials_name is None) or not(file_credentials_path is None):
             self.with_gqb(file_credentials_path=file_credentials_path, 
                             file_credentials_name=file_credentials_name)
-
 
         df = pd.read_gbq(query=query, project_id=project_id,
                          credentials=self.credentials_bq)
