@@ -1,6 +1,7 @@
 # This module is used to develop functions that read files containing SQL 
 # Queries.
 
+import warnings
 
 from .absolute_paths import AbsPaths
 
@@ -30,8 +31,14 @@ def read_sql(file_name:str, file_path:str = None) -> str:
         file_path = abs_path_manager.get_abs_path_file(file_name)
 
     if isinstance(file_path, list):
-        file_path = file_path[0]
+        msg = f"""
+        2 or more files with the same name were found, the query that has 
+        been read is the one for the location {file_path[0]}
+        """
+        warnings.warn(msg)
 
+        file_path = file_path[0]
+    
     with open(file_path, 'r') as f:
         return f.read()
 
