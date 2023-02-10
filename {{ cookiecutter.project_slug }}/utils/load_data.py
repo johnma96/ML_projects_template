@@ -7,26 +7,26 @@ from .read_sql_file import read_sql
 
 class LoadData(MakeConnection):
     """
-    Class to load data in a Pythonic way, this from different information 
-    sources: 
+    Class to load data in a Pythonic way, this from different information
+    sources:
         - Data in the data subfolder.
         - Called from some RBDM such as BigQuery, MySQL, Postgres, etc.
 
     Attributes
     ----------
     file_credentials_path: str
-        Absolute path to the .json credentials file to BigQuery. Only if the 
+        Absolute path to the .json credentials file to BigQuery. Only if the
         with_gbq() method is used. Inherited from MakeConnection class
     credentials_bq: service_account
-        Connection object to BigQuery using a service account. Only if the 
+        Connection object to BigQuery using a service account. Only if the
         with_gbq() method is used. Inherited from MakeConnection class
     max_level: int
-        Maximum level of depth within the package, in which it seeks to establish 
+        Maximum level of depth within the package, in which it seeks to establish
         the absolute paths. Inherited from the AbsPaths class
 
     Methods
     -------
-    from_BigQuery(query, path_credentials=None, name_file=None, 
+    from_BigQuery(query, path_credentials=None, name_file=None,
                 project_id='dolphin-prod')
         Read data directly from GCP BigQuery Service
     from_csv(path=None, type=None, name_file=None, **kwargs)
@@ -34,54 +34,56 @@ class LoadData(MakeConnection):
     from_excel(path=None, type=None, name_file=None, **kwargs)
         Read excel files from sub-subfolders within data subfolder
     """
-    
+
     def __init__(
         self,
         file_credentials_path: str = None,
-        file_credentials_name = "credentials_bq.json",
-        type_rdbms: str = 'bigquery',
-        max_level: int = 5
+        file_credentials_name="credentials_bq.json",
+        type_rdbms: str = "bigquery",
+        max_level: int = 5,
     ) -> None:
 
-        # Set max depth to handle routes 
+        # Set max depth to handle routes
         super().__init__(max_level=max_level)
-        
+
         try:
             # Establish connection with BigQuery service using MakeConnection class
             if type_rdbms == "bigquery":
-                self.with_gqb(file_credentials_path=file_credentials_path, 
-                            file_credentials_name=file_credentials_name)
+                self.with_gqb(
+                    file_credentials_path=file_credentials_path,
+                    file_credentials_name=file_credentials_name,
+                )
         except (FileNotFoundError, ValueError):
             warnings.warn("Your instance is not connected with BigQuery")
 
-
-    def from_BigQuery(self,
-                    query: str,
-                    file_credentials_path: str = None,
-                    file_credentials_name: str = None,
-                    project_id: str = "dolphin-prod",
-                    **kwargs
-                ) -> pd.DataFrame:
+    def from_bigquery(
+        self,
+        query: str,
+        file_credentials_path: str = None,
+        file_credentials_name: str = None,
+        project_id: str = "dolphin-prod",
+        **kwargs
+    ) -> pd.DataFrame:
         """
         Load data directly from the Google Cloud Platform BigQuery service.
 
         Parameters
         ----------
         query : str
-            Query to be read and then load data. You can pass a query directly 
+            Query to be read and then load data. You can pass a query directly
             or the name of the .sql file that contains it.
         path_credentials : str, optional
             Credential's path to do connection with GCP (It's recommended use a
-            service account). By default is None. If it's not passed you can 
-            set name_file parameter to search credential within credentials 
+            service account). By default is None. If it's not passed you can
+            set name_file parameter to search credential within credentials
             subfolder
         name_file : str, optional
-            File name, json type that has credentials to connect with some GCP 
+            File name, json type that has credentials to connect with some GCP
             project, by default None
         project_id : str, optional
             GCP project ID, by default "dolphin-prod"
         **kwargs: dict, optional
-            Extra arguments (such as a google BigQuery connection object) to be 
+            Extra arguments (such as a google BigQuery connection object) to be
             passed to pandas_gbq's to_gbq function
 
         Returns
@@ -92,7 +94,7 @@ class LoadData(MakeConnection):
         Raises
         ------
         ValueError
-            If neither a path nor a name is supplied to search for credentials 
+            If neither a path nor a name is supplied to search for credentials
             within the credentials subfolder
         """
 
@@ -100,35 +102,47 @@ class LoadData(MakeConnection):
             query = read_sql(file_name=query)
 
         # Make connection with BigQuery service
-        if not(file_credentials_name is None) or not(file_credentials_path is None):
-            self.with_gqb(file_credentials_path=file_credentials_path, 
-                            file_credentials_name=file_credentials_name)
+        if not (file_credentials_name is None) or not (file_credentials_path is None):
+            self.with_gqb(
+                file_credentials_path=file_credentials_path,
+                file_credentials_name=file_credentials_name,
+            )
 
-        df = pd.read_gbq(query=query, project_id=project_id,
-                         credentials=self.credentials_bq)
+        df = pd.read_gbq(
+            query=query, project_id=project_id, credentials=self.credentials_bq
+        )
 
         return df
 
-    def from_csv(self, path: str = None, type: str = None, 
-                name_file: str = None, **kwargs) -> pd.DataFrame:
+    def from_mysql(self): pass 
+
+    def from_psql(self): pass
+
+    def from_csv(
+        self,
+        file_path: str = None,
+        data_type: str = "raw",
+        file_name: str = None,
+        **kwargs
+    ) -> pd.DataFrame:
         """
         Call data using pandas.read_csv method. To get data directly from data
-        folder just select the type of folder and set file's name. 
-        
+        folder just select the type_data of folder and set file's name.
+
         You can pass all arguments of pandas native method.
 
         Parameters
         ----------
         path : str, optional
-            File path, by default None. If None, the file is expected to be in 
+            File path, by default None. If None, the file is expected to be in
             the data subfolder
-        type :{None, 'raw', 'interim', 'processed', 'external'} str, optional
-            Name of the sub-subfolder within the data subfolder, by default 
+        type :{'raw', 'interim', 'processed', 'external'} str, optional
+            Name of the sub-subfolder within the data subfolder, by default
             None. Keep None if you provide a path to the file
         name_file : str, optional
-            Name of the file to be searched within the data folder, by default 
+            Name of the file to be searched within the data folder, by default
             None
-        **kwargs : 
+        **kwargs :
             Additional keywords passed to pandas.read_csv() method
 
         Returns
@@ -136,24 +150,24 @@ class LoadData(MakeConnection):
         pd.DataFrame
             Dataframe with loaded data
         """
-        try: 
-            path_to_search = self.__build_path(path, type, name_file)
-            df = pd.read_csv(filepath_or_buffer=path_to_search, **kwargs)
-        except:
-            warnings.warn(message="The file is not within the searched subfolder type."
-                                " Will be searched using only the name." 
-                                " Make sure it is the file you are looking for.")
-            path_to_search = self.abs_.get_abs_path_file(name_file)
-            df = pd.read_csv(filepath_or_buffer=path_to_search, **kwargs)
 
-        return df
+        file_path = self.__build_path(
+            file_path=file_path, data_type=data_type, file_name=file_name
+        )
 
-    def from_excel(self, path: str = None, type: str = None, 
-                    name_file: str = None, **kwargs) -> pd.DataFrame:
+        return pd.read_csv(filepath_or_buffer=file_path, **kwargs)
+
+    def from_excel(
+        self,
+        file_path: str = None,
+        data_type: str = "raw",
+        file_name: str = None,
+        **kwargs
+    ) -> pd.DataFrame:
         """
         Call data using pandas.read_excel method. To get data directly from data
-        folder just select the type of folder and set file's name. 
-        
+        folder just select the type of folder and set file's name.
+
         You can pass all arguments of pandas native method.
 
         Parameters
@@ -161,12 +175,12 @@ class LoadData(MakeConnection):
         path : str, optional
             _description_, by default None
         type :{None, 'raw', 'interim', 'processed', 'external'} str, optional
-            Name of the sub-subfolder within the data subfolder, by default 
+            Name of the sub-subfolder within the data subfolder, by default
             None. Keep None if you provide a path to the file
         name_file : str, optional
-            Name of the file to be searched within the data folder, by default 
+            Name of the file to be searched within the data folder, by default
             None
-        **kwargs : 
+        **kwargs :
             Additional keywords passed to pandas.read_excel() method
 
         Returns
@@ -175,74 +189,63 @@ class LoadData(MakeConnection):
             Dataframe with loaded data
         """
 
-        try: 
-            path_to_search = self.__build_path(path, type, name_file)
-            df = pd.read_excel(io=path_to_search, **kwargs)
-        except:
-            warnings.warn(message="The file is not within the searched subfolder type."
-                                " Will be searched using only the name." 
-                                " Make sure it is the file you are looking for.")
-            path_to_search = self.abs_.get_abs_path_file(name_file)
-            df = pd.read_excel(io=path_to_search, **kwargs)
+        file_path = self.__build_path(
+            file_path=file_path, data_type=data_type, file_name=file_name
+        )
 
-        return df
+        return pd.read_excel(io=file_path, **kwargs)
 
-    def __build_path(self, path: str = None, type: str = None,
-                     name_file: str = None) -> str:
+    def __build_path(
+        self, file_path: str = None, data_type: str = "raw", file_name: str = None
+    ) -> str:
         """
-        Build the path to find the file in which the data to be loaded is 
+        Build the path to find the file in which the data to be loaded is
         located.
 
         Parameters
         ----------
-        path : str, optional
-            File path, by default None. If None, the file is expected to be in 
+        file_path : str, optional
+            File path, by default None. If None, the file is expected to be in
             the data subfolder
-        type :{None, 'raw', 'interim', 'processed', 'external'} str, optional
-            Name of the sub-subfolder within the data subfolder, by default 
+        type_data :{'raw', 'interim', 'processed', 'external'} str, optional
+            Name of the sub-subfolder within the data subfolder, by default
             None. Keep None if you provide a path to the file
-        name_file : str, optional
-            Name of the file to be searched within the data folder, by default 
+        file_name : str, optional
+            Name of the file to be searched within the data folder, by default
             None
 
         Returns
         -------
         str
-            File path passed by the user or absolute file path within the data 
+            File path passed by the user or absolute file path within the data
             subfolder
 
         Raises
         ------
-        KeyError
-            If a path to the file is not provided, or if you do not provide a 
-            correct name of the subfolders within the data folder, or if you do 
-            not provide the correct name of any file
+        FileNotFoundError
+            if the requested file exists in a different path than the data_type
+            passed
         """
-        type_options = ['raw', 'interim', 'processed', 'external']
+        if file_path is None:
+            file_path = self.get_abs_path_file(file_name=file_name)
 
+            # Case in which are multiple files with same name in the package
+            if isinstance(file_path, list):
+                try:
+                    file_path_end = [path for path in file_path if data_type in path][0]
+                except:
+                    msg = """File wasn't found within {} folder. Was found in other paths: \n{}""".format(
+                        data_type, "\n".join(file_path)
+                    )
+                    raise FileNotFoundError(msg)
 
-        if all([True if option is None else False for option in (path, type, name_file)]):
-            raise KeyError("You did not provide information for the search")
+                file_path = file_path_end
 
-        elif (path is not None) and (type is None) and (name_file is None):
-            path_to_search = path
-        
-        elif (path is None) and (type in type_options) and (name_file is not None):
-            path_to_search = self.abs_.get_abs_path_folder(folder_name=type, deep=2)
-            path_to_search += name_file
+            # The file isn't within the type_data folder gave
+            if not (data_type in file_path):
+                msg = """File wasn't found within {} folder. Was found in other paths: \n{}""".format(
+                    data_type, file_path
+                )
+                raise FileNotFoundError(msg)
 
-        elif (path is None) and not(type in type_options) and (name_file is not None):
-            first_part_msg = "The subfolder passed does not exist within data."
-            if type is None:
-                first_part_msg = ''
-            warnings.warn(message=first_part_msg+ 
-                                    " The file will be searched using only the name." 
-                                    " Make sure it is the file you are looking for.")
-            path_to_search = self.abs_.get_abs_path_file(name_file)
-
-        else:
-            raise KeyError(
-                "Cannot set a path to the file with the given parameter settings"
-            )
-
-        return path_to_search
+        return file_path
